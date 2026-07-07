@@ -1,0 +1,21 @@
+# Ignore compiled executables and object files
+*.o
+*.out
+*.exe
+*.bin
+
+# Ignore build folder
+build/
+
+# Ignore Vitis HLS/Vivado build directories and logs
+.Xil/
+*.jou
+*.log
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db
