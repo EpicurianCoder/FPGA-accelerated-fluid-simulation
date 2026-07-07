@@ -37,6 +37,20 @@ To simulate a continuous wind tunnel environment, Periodic Boundary Conditions a
 
 - **Design Choice:** In standard software, wrap-around logic is handled using the modulo operator (`%`). However, division and modulo operations consume massive amounts of DSP resources on an FPGA. Therefore, this boundary logic is implemented using strictly conditional statements (`if/else`), which synthesize cleanly into ultra-fast hardware multiplexers.
 
+## Baseline Validation Testing
+
+The C++ software model was validated on the CPU using a uniform rightward-flowing wind tunnel initialization ($u_x = 0.1$, $\rho = 1.0$) across a 256x64 grid layout for 100 evaluation steps.
+
+```bash
+LBM Testbench started...
+Fluid initialized. Running 100 iterations...
+Fluid Simulation Ended.
+--- Test Complete ---
+Target Density:  1.00000  | Final Density:  1.00000
+Target Velocity: 0.10000  | Final Velocity: 0.10000
+RESULT: PASS (Mass conserved)
+```
+
 ## Directory Structure
 
 - `/src` - Contains the synthesizable C++ hardware kernel and headers (`kria_lbm.cpp`, `kria_lbm.h`).
