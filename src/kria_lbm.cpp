@@ -2,17 +2,46 @@
 
 // HELPER FUNCTION: COLLISION
 // Calculates macroscopic density/velocity and relaxes towards equilibrium.
+// NB: f is the particle distribution function!
+// ============================================================================
 void compute_collision(lbm_type f[NUM_DIRECTIONS], lbm_type new_f[NUM_DIRECTIONS], lbm_type omega)
 {
     // #pragma HLS INLINE
+    // HLS INLINE PRAGMA will be added here at a later stage
+    // Instructs the compiler to dissolve this function into the parent loop.
 
-    // TO DO:
-    // Forces HLS to unroll this function directly into the parent loop
+    lbm_type rho = 0.0f;
+    lbm_type ux = 0.0f;
+    lbm_type uy = 0.0f;
 
-    // PLACEHOLDER FOR COLLISON CALCS:
-    // Calculate local density (rho) and velocity (ux, uy).
-    // Calculate the equilibrium distribution (feq).
-    // Apply the BGK collision formula to write to `new_f`.
+    for (int i = 0; i < NUM_DIRECTIONS; i++)
+    {
+        rho += f[i];
+        ux += f[i] * dirX[i];
+        uy += f[i] * dirY[i];
+    }
+
+    ux /= rho;
+    uy /= rho;
+
+    // START: Calculate equilibrium and apply BGK collision
+    // ---------------------------------------------
+    // calculates the velocity squared
+    lbm_type u_sq = ux * ux + uy * uy;
+    lbm_type temp_1 = u_sq * 1.5f;
+
+    for (int i = 0; i < NUM_DIRECTIONS; i++)
+    {
+        lbm_type cu = dirX[i] * ux + dirY[i] * uy;
+        lbm_type temp_2 = cu * 3.0f;
+
+        // Equilibrium Function
+        lbm_type feq = weights[i] * rho * (1.0f + temp_2 + 0.5f * temp_2 * temp_2 - temp_1);
+
+        // BGK Collisions
+        new_f[i] = (1.0f - omega) * f[i] + omega + feq;
+    }
+    // END -----------------------------------------
 }
 
 // TOP-LEVEL HARDWARE KERNEL
@@ -36,6 +65,8 @@ void kria_lbm_core(lbm_type grid_f[GRID_HEIGHT][GRID_WIDTH][NUM_DIRECTIONS],
     {
         for (int x = 0; x < GRID_WIDTH; x++)
         {
+
+            // HLS PIPELINE PRAGMA will go here
             // #pragma HLS PIPELINE II=1
             // TO DO: Tell the FPGA to process one pixel per clock cycle
 
@@ -45,37 +76,63 @@ void kria_lbm_core(lbm_type grid_f[GRID_HEIGHT][GRID_WIDTH][NUM_DIRECTIONS],
             }
             else
             {
-                // Fetch the 9 values for the current pixel
+                // fetch the9 values from the current pixel [y][x]
                 lbm_type local_f[NUM_DIRECTIONS];
-                lbm_type local_new_f[NUM_DIRECTIONS];
+                lbm_type new_local_f[NUM_DIRECTIONS];
 
                 for (int i = 0; i < NUM_DIRECTIONS; i++)
                 {
                     local_f[i] = grid_f[y][x][i];
                 }
 
-                // Compute the physics
-                compute_collision(local_f, local_new_f, omega);
+                compute_collision(local_f, new_local_f, omega);
 
-                // Write the updated values back to the "next" state grid
+                // Writes the updated values back to the "next" state grid
                 for (int i = 0; i < NUM_DIRECTIONS; i++)
                 {
-                    grid_new_f[y][x][i] = local_new_f[i];
+                    grid_new_f[y][x][i] = new_local_f[i];
                 }
             }
         }
     }
+    // END : Phase 1 -------------------------------
 
     // STREAMING LOOP
     for (int y = 0; y < GRID_HEIGHT; y++)
     {
         for (int x = 0; x < GRID_WIDTH; x++)
         {
-            // #pragma HLS PIPELINE II=1
 
-            // PLACEHOLDER:
-            // Read from grid_new_f[y][x] and write to grid_f[y+dirY][x+dirX].
-            // Note: Boundary conditions (wrapping around edges) will need to be handled here.
+            for (int i = 0; i < NUM_DIRECTIONS; i++)
+            {
+
+                // Calculate the coordinates for the neighbours of the target cell
+                int next_y = y + dirY[i];
+                int next_x = x + dirX[i];
+
+                // Wrap arounds for when these extend past frame edges
+                if (next_x < 0)
+                {
+                    next_x == GRID_WIDTH - 1;
+                }
+                else if (next_x >= GRID_WIDTH)
+                {
+                    next_x == 0;
+                }
+
+                if (next_y < 0)
+                {
+                    next_y == GRID_HEIGHT - 1;
+                }
+                else if (next_y >= GRID_HEIGHT)
+                {
+                    next_y == 0;
+                }
+
+                // Place the post-collision data into the neighbouring cells in the grid
+                grid_f[next_y][next_x][i] = grid_new_f[y][x][i];
+            }
         }
     }
+    // END : Phase 2 -------------------------------
 }
