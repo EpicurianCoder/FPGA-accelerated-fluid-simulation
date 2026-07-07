@@ -19,3 +19,6 @@ __pycache__/
 # Ignore OS-generated files
 .DS_Store
 Thumbs.db
+
+# ignore any compile test with prefix
+test_*

@@ -20,6 +20,11 @@ The core physics engine is written in C++ and synthesized into a custom hardware
 - **Physics Engine:** The localized BGK collision mathematics (calculating macroscopic density/velocity, equilibrium distribution, and relaxation) have been successfully implemented.
 - **CPU Testbench:** A basic C++ testing environment has been established to allocate heap memory and verify mathematical execution on the CPU prior to hardware synthesis.
 
+### Phase 3: Boundary & Obstacle Mechanics (Complete)
+
+- **Bounce-Back Boundaries:** A hardware-optimized bounce-back mechanism was integrated into the primary execution loop. Solid cells accurately invert particle distribution populations by 180 degrees using direct array pointer routing, requiring zero floating-point math overhead.
+- **Obstacle Verification:** A flat plate obstruction was placed into the simulation path within the testbench framework. The verification confirmed stable fluid routing, physical wake formation downstream, and absolute mass conservation.
+
 ## Hardware Architecture & Data Flow
 
 To maximize throughput on the FPGA fabric, the data flow dictates a strictly localized, two-phase operation utilizing a closed-loop memory architecture.

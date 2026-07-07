@@ -24,10 +24,25 @@ int main()
     lbm_type init_uy = 0.0f;
     lbm_type init_u_sq = init_ux * init_ux + init_uy * init_uy;
 
+    // Define a vertical obstacle in the flow channel
+    int obstacle_x = 32;
+    int obstacle_y_start = (GRID_HEIGHT / 2) - 8; // Row 24
+    int obstacle_y_end = (GRID_HEIGHT / 2) + 8;   // Row 40
+
     for (int y = 0; y < GRID_HEIGHT; y++)
     {
         for (int x = 0; x < GRID_WIDTH; x++)
         {
+            // Place the solid barrier map coordinates
+            if (x == obstacle_x && y >= obstacle_y_start && y <= obstacle_y_end)
+            {
+                obstacle_map[y][x] = true;
+            }
+            else
+            {
+                obstacle_map[y][x] = false;
+            }
+
             for (int i = 0; i < NUM_DIRECTIONS; i++)
             {
                 lbm_type cu = dirX[i] * init_ux + dirY[i] * init_uy;
@@ -52,7 +67,7 @@ int main()
 
     // START: Phase 3 - Result Checking
     // ---------------------------------------------
-    int check_x = GRID_WIDTH / 2;
+    int check_x = GRID_WIDTH / 2; // Column 128 (Downstream wake)
     int check_y = GRID_HEIGHT / 2;
 
     lbm_type final_rho = 0.0f;

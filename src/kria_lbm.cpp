@@ -72,7 +72,16 @@ void kria_lbm_core(lbm_type grid_f[GRID_HEIGHT][GRID_WIDTH][NUM_DIRECTIONS],
 
             if (obstacle_map[y][x])
             {
-                // TO DO: Bounce-back boundary condition for walls
+                // Fluid hitting an obstacle cell reflects 180 degrees back
+                // into its source direction, conserving momentum and mass.
+                for (int i = 0; i < NUM_DIRECTIONS; i++)
+                {
+                    // direction[] is a look up table that reverses direction N -> S
+                    int inv_dir = opposite[i];
+
+                    // Apply these new vectors to the grid
+                    grid_new_f[y][x][inv_dir] = grid_f[y][x][i];
+                }
             }
             else
             {
