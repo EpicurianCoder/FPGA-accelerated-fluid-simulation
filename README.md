@@ -6,14 +6,19 @@ This project implements a high-performance computational fluid dynamics (CFD) si
 
 The core physics engine is written in C++ and synthesized into a custom hardware IP block using **AMD Vitis HLS**. The host application and visualization are handled by the Kria's ARM processor using Python and the PYNQ framework.
 
-## Project Status (Phase 1: Architecture)
+## Project Status
 
-Before developing the hardware kernel, the mathematical and architectural boundaries of the project were established to ensure compatibility with the FPGA fabric:
+### Phase 1: Architecture (Complete)
 
-- **Algorithm Pivot:** Traditional macroscopic fluid solvers (such as Eulerian Navier-Stokes or Gauss-Seidel relaxation) were discarded because they require global grid sweeps that stall parallel hardware. The Lattice Boltzmann Method was selected because the core operations (Stream and Collide) are highly localized, making the algorithm ideally suited for DSP slices and hardware pipelining.
-- **Hardware Scale Limits:** To prevent immediate bottlenecks with DDR4 memory and complex AXI4-Stream interfaces, the initial prototype is constrained to a **256x64 grid**. This dimensioning ensures the entire environment fits safely within the Kria's internal BRAM/URAM capacity.
-- **Separation of Concerns:** The FPGA is strictly reserved for executing the LBM physics. All peripheral tasks—such as generating NACA airfoil boundary coordinates, reading sensor telemetry, and rendering pixels—are delegated to Python scripts running on the ARM processor.
-- **Project Structure:** A strict folder hierarchy was established to isolate hardware code from software code, preventing the Vitis HLS compiler from attempting to synthesize testbenches or UI logic.
+- **Algorithm Pivot:** Traditional macroscopic fluid solvers (such as Eulerian Navier-Stokes or Gauss-Seidel relaxation) were discarded. The Lattice Boltzmann Method was selected because the core operations (Stream and Collide) are highly localized, making the algorithm ideally suited for DSP slices and hardware pipelining.
+- **Hardware Scale Limits:** The initial prototype is constrained to a **256x64 grid** to ensure the entire environment fits safely within the Kria's internal BRAM/URAM capacity, bypassing DDR4 memory bottlenecks.
+- **Separation of Concerns:** The FPGA is strictly reserved for executing the LBM physics. Peripheral tasks (sensor telemetry, UI rendering) are delegated to Python scripts on the ARM processor.
+
+### Phase 2: Software Baseline (In Progress)
+
+- **Data Structures:** The D2Q9 physics constants, velocity vectors, and grid limits have been defined in the core header file.
+- **Physics Engine:** The localized BGK collision mathematics (calculating macroscopic density/velocity, equilibrium distribution, and relaxation) have been successfully implemented.
+- **CPU Testbench:** A basic C++ testing environment has been established to allocate heap memory and verify mathematical execution on the CPU prior to hardware synthesis.
 
 ## Directory Structure
 

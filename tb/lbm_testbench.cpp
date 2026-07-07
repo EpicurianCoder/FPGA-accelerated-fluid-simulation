@@ -16,4 +16,3 @@ int main()
 
     std::cout << "CPU testing Done... " << std::endl;
 }
-les
