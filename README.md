@@ -65,6 +65,4 @@ RESULT: PASS (Mass conserved)
 
 ## Next Steps
 
-1. Define the core data structures and D2Q9 constants in `kria_lbm.h`.
-2. Draft the localized math for the macroscopic and equilibrium calculations in `kria_lbm.cpp`.
-3. Build a simple CPU testbench to verify the physics before invoking the Vitis HLS compiler.
+1. Define Pragmas and begin the process of converting to parallel execution.

@@ -119,27 +119,11 @@ void kria_lbm_core(lbm_type grid_f[GRID_HEIGHT][GRID_WIDTH][NUM_DIRECTIONS],
                 int next_y = y + dirY[i];
                 int next_x = x + dirX[i];
 
-                // Wrap arounds for when these extend past frame edges
-                if (next_x < 0)
+                // Only stream if the destination is safely inside the grid boundaries
+                if (next_x >= 0 && next_x < GRID_WIDTH && next_y >= 0 && next_y < GRID_HEIGHT)
                 {
-                    next_x = GRID_WIDTH - 1;
+                    grid_f[next_y][next_x][i] = grid_new_f[y][x][i];
                 }
-                else if (next_x >= GRID_WIDTH)
-                {
-                    next_x = 0;
-                }
-
-                if (next_y < 0)
-                {
-                    next_y = GRID_HEIGHT - 1;
-                }
-                else if (next_y >= GRID_HEIGHT)
-                {
-                    next_y = 0;
-                }
-
-                // Place the post-collision data into the neighbouring cells in the grid
-                grid_f[next_y][next_x][i] = grid_new_f[y][x][i];
             }
         }
     }
