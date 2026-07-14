@@ -15,16 +15,41 @@ typedef float lbm_type;
 // D2Q9 CONSTANTS
 // These are static constant arrays.
 // Eventualy I will use Vitis HLS to hardwire these directly into logic gates
+// eg (dirX[2], dirY[2]) would be the third "direction" in those combined arrays
+// with the value (0, -1) representing North ^
 const int dirX[NUM_DIRECTIONS] = {0, 1, 0, -1, 0, 1, -1, -1, 1};
 const int dirY[NUM_DIRECTIONS] = {0, 0, -1, 0, 1, -1, -1, 1, 1};
 
+// Indices for bounce-back boundary conditions (reversing direction)
+// eg. Taking (dirX[2], dirY[2]) and applying opposite[2] would be (dirX[2], opposite[2])
+// (0, -1) NORTH becomes (0, 1) SOUTH
+const int opposite[NUM_DIRECTIONS] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
+
+// IMPORTANT LAYOUT FOR 9-CELL GRID !!!
+
+// Bucket 0 (Center)                (0, 0)
+// Bucket 1 (East, +X)              (1, 0)
+// Bucket 2 (North, -Y)             (0, -1)
+// Bucket 3 (West, -X)              (-1, 0)
+// Bucket 4 (South, +Y)             (0, 1)
+// Bucket 5 (North-East, +X, -Y)    (1, -1)
+// Bucket 6 (North-West, -X, -Y)    (-1, -1)
+// Bucket 7 (South-West, -X, +Y)    (-1, 1)
+// Bucket 8 (South-East, +X, +Y)    (1, 1)
+
+// These values are the basis for The Maxwell-Boltzmann Distribution
+// This allows us to treat the diaognal distances in same manner as the horiz/vert
+// It is the probable distribution of mass, reflected as ratios
 const lbm_type weights[NUM_DIRECTIONS] = {
     4.0f / 9.0f,
-    1.0f / 9.0f, 1.0f / 9.0f, 1.0f / 9.0f, 1.0f / 9.0f,
-    1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f};
-
-// Indices for bounce-back boundary conditions (reversing direction)
-const int opposite[NUM_DIRECTIONS] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
+    1.0f / 9.0f,
+    1.0f / 9.0f,
+    1.0f / 9.0f,
+    1.0f / 9.0f,
+    1.0f / 36.0f,
+    1.0f / 36.0f,
+    1.0f / 36.0f,
+    1.0f / 36.0f};
 
 // FUNCTION PROTOTYPES
 void kria_lbm_core(lbm_type grid_f[GRID_HEIGHT][GRID_WIDTH][NUM_DIRECTIONS],

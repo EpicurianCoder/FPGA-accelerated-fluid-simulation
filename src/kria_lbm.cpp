@@ -10,12 +10,15 @@ void compute_collision(lbm_type f[NUM_DIRECTIONS], lbm_type new_f[NUM_DIRECTIONS
     // HLS INLINE PRAGMA will be added here at a later stage
     // Instructs the compiler to dissolve this function into the parent loop.
 
+    // rho is mass per unit volume in physics
     lbm_type rho = 0.0f;
     lbm_type ux = 0.0f;
     lbm_type uy = 0.0f;
 
+    // calculates the sum of velocity of the particles and vectors
     for (int i = 0; i < NUM_DIRECTIONS; i++)
     {
+        // for each vector, the
         rho += f[i];
         ux += f[i] * dirX[i];
         uy += f[i] * dirY[i];
