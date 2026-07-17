@@ -7,7 +7,7 @@ This project implements a high-performance computational fluid dynamics (CFD) si
 The core physics engine is written in C++ and synthesized into a custom hardware IP block using **AMD Vitis HLS**. The host application and visualization are handled by the Kria's ARM processor using Python and the PYNQ framework.
 
 <p align="center">
-  <img src="samples/fluid_sim_pillars_2.gif" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+    <img src="samples/fluid_sim_pillars_2.gif" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
 </p>
 
 _The custom LBM fluid simulation, currently executed using CPU and before HLS pragmas are impelemnted for FPGA hardware acceleration._
@@ -26,23 +26,31 @@ _Running at 300fps, with 'dual pillar' obstacles and an omega of 1.93_
 - **Data Structures:** The D2Q9 physics constants, velocity vectors, and grid limits have been defined in the core header file.
 
 <p align="center">
-  <img src="samples/header_image.png" width="600" alt="Pseudo code for the header file" />
+    <a href="src/kria_lbm.h">
+        <img src="samples/header_image.png" width="600" alt="Pseudo code for the header file" />
+    </a>
 </p>
 
 - **Physics Engine:** The localized BGK collision mathematics (calculating macroscopic density/velocity, equilibrium distribution, and relaxation) have been successfully implemented.
 
 <p align="center">
-  <img src="samples/core_image.png" width="600" alt="Pseudo code for the core physics file" />
+    <a href="src/kria_lbm.cpp">
+        <img src="samples/core_image.png" width="600" alt="Pseudo code for the core physics file" />
+    </a>
 </p>
 
 - **CPU Testbench:** A basic C++ testing environment has been established to allocate heap memory and verify mathematical execution on the CPU prior to hardware synthesis.
 
 <p align="center">
-  <img src="samples/tests_image.png" width="600" alt="Pseudo code for the testbench file" />
+    <a href="tb/lbm_testbench.cpp">
+        <img src="samples/tests_image.png" width="600" alt="Pseudo code for the testbench file" />
+    </a>
 </p>
 
 <p align="center">
-  <img src="samples/opencv_image.png" width="600" alt="Pseudo code for the open_cv tenchbench file" />
+    <a href="tb/lbm_tb_opencv.cpp.cpp">
+        <img src="samples/opencv_image.png" width="600" alt="Pseudo code for the open_cv tenchbench file" />
+    </a>
 </p>
 
 ### Phase 3: Boundary & Obstacle Mechanics
@@ -54,6 +62,12 @@ _Running at 300fps, with 'dual pillar' obstacles and an omega of 1.93_
 
 To maximize throughput on the FPGA fabric, the data flow dictates a strictly localized, two-phase operation utilizing a closed-loop memory architecture.
 
+<p align="center">
+    <img src="samples/cells_image.png" width="900" alt="Data structure breakdown LBM" />
+</p>
+
+_(left) Interacting forces between D2Q9 cells and (right) how their relevant mass distrution interactions are highlighted (yellow squares) in order to calculate the updated mass distribution for the central cell (red squares)_
+
 ### 1. Ping-Pong Memory Buffer
 
 The algorithm prevents memory read/write collisions by employing two distinct grid arrays in Block RAM (BRAM). The data flows in a continuous cycle:
@@ -62,12 +76,6 @@ The algorithm prevents memory read/write collisions by employing two distinct gr
 - **Phase 2 (Streaming):** The hardware reads the post-collision data from `grid_new_f`, shifts the coordinates based on the 9 directional velocity vectors, and writes the updated data back into `grid_f`, readying the memory for the next time step.
 
 ### 2. Hardware-Optimized Boundary Conditions
-
-<p align="center">
-  <img src="samples/cells_image.png" width="900" alt="Data structure breakdown LBM" />
-</p>
-
-_(left) Interacting forces between D2Q9 cells and (right) how their relevant mass distrution interactions are highlighted (yellow squares) in order to calculate the updated mass distribution for the central cell (red squares)_
 
 To simulate a continuous wind tunnel environment, Periodic Boundary Conditions are applied during the streaming phase. If a particle hits the side of the 256x64 grid, it immediately bounces off according to the standard object collision rules within the environment (particles reflect 180degrees).
 
@@ -97,4 +105,10 @@ RESULT: PASS (Mass conserved)
 
 ## Next Steps
 
-1. Define Pragmas and begin the process of converting to parallel execution.
+Define Pragmas and begin the process of converting to parallel execution.
+
+<p align="center">
+    <a href="/pragmas.txt">
+        <img src="samples/pragmas.png" width="600" alt="Pragmas to be used in the future HLS process" />
+    </a>
+</p>
