@@ -6,21 +6,46 @@ This project implements a high-performance computational fluid dynamics (CFD) si
 
 The core physics engine is written in C++ and synthesized into a custom hardware IP block using **AMD Vitis HLS**. The host application and visualization are handled by the Kria's ARM processor using Python and the PYNQ framework.
 
+<p align="center">
+  <img src="samples/fluid_sim_pillars_2.gif" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+</p>
+
+The custom LBM fluid simulation, currently executed using CPU and before HLS pragmas are impelemnted for FPGA hardware acceleration.
+Running at 300fps, with 'dual pillar' obstacles and an omega of 1.93
+
 ## Project Status
 
 ### Phase 1: Architecture
 
 - **Algorithm Pivot:** Traditional macroscopic fluid solvers (such as Eulerian Navier-Stokes or Gauss-Seidel relaxation) were discarded. The Lattice Boltzmann Method was selected because the core operations (Stream and Collide) are highly localized, making the algorithm ideally suited for DSP slices and hardware pipelining.
 - **Hardware Scale Limits:** The initial prototype is constrained to a **256x64 grid** to ensure the entire environment fits safely within the Kria's internal BRAM/URAM capacity, bypassing DDR4 memory bottlenecks.
-- **Separation of Concerns:** The FPGA is strictly reserved for executing the LBM physics. Peripheral tasks (sensor telemetry, UI rendering) are delegated to Python scripts on the ARM processor.
+- **Separation of Concerns:** The FPGA is strictly reserved for executing the LBM physics. Peripheral tasks (sensor telemetry, UI rendering) are delegated to C++ threads executed on the ARM processor.
 
 ### Phase 2: Software Baseline
 
 - **Data Structures:** The D2Q9 physics constants, velocity vectors, and grid limits have been defined in the core header file.
+
+<p align="center">
+  <img src="samples/header_image.png" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+</p>
+
 - **Physics Engine:** The localized BGK collision mathematics (calculating macroscopic density/velocity, equilibrium distribution, and relaxation) have been successfully implemented.
+
+<p align="center">
+  <img src="samples/core_image.png" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+</p>
+
 - **CPU Testbench:** A basic C++ testing environment has been established to allocate heap memory and verify mathematical execution on the CPU prior to hardware synthesis.
 
-### Phase 3: Boundary & Obstacle Mechanics (Complete)
+<p align="center">
+  <img src="samples/tests_image.png" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+</p>
+
+<p align="center">
+  <img src="samples/opencv_image.png" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+</p>
+
+### Phase 3: Boundary & Obstacle Mechanics
 
 - **Bounce-Back Boundaries:** A hardware-optimized bounce-back mechanism was integrated into the primary execution loop. Solid cells accurately invert particle distribution populations by 180 degrees using direct array pointer routing, requiring zero floating-point math overhead.
 - **Obstacle Verification:** A flat plate obstruction was placed into the simulation path within the testbench framework. The verification confirmed stable fluid routing, physical wake formation downstream, and absolute mass conservation.
@@ -38,9 +63,9 @@ The algorithm prevents memory read/write collisions by employing two distinct gr
 
 ### 2. Hardware-Optimized Boundary Conditions
 
-To simulate a continuous wind tunnel environment, Periodic Boundary Conditions are applied during the streaming phase. If a particle exits one side of the 256x64 grid, it immediately wraps around to the opposite side.
+To simulate a continuous wind tunnel environment, Periodic Boundary Conditions are applied during the streaming phase. If a particle hits the side of the 256x64 grid, it immediately bounces off according to the standard object collision rules within the environment (particles reflect 180degrees).
 
-- **Design Choice:** In standard software, wrap-around logic is handled using the modulo operator (`%`). However, division and modulo operations consume massive amounts of DSP resources on an FPGA. Therefore, this boundary logic is implemented using strictly conditional statements (`if/else`), which synthesize cleanly into ultra-fast hardware multiplexers.
+- **Design Choice:** I removed the wraparound and instead use the edges of the scene as boundaries and use this to calcuate the fact that mass has been conserved.
 
 ## Baseline Validation Testing
 
@@ -62,6 +87,7 @@ RESULT: PASS (Mass conserved)
 - `/tb` - Contains the C++ testbench used strictly for CPU-based math verification (`lbm_testbench.cpp`).
 - `/host` - Contains the Python control scripts and visualization utilities.
 - `/data` - Contains generated obstacle maps (e.g., airfoil coordinates) and benchmark outputs.
+- `/samples` - Contains the sources for imagery from any of the documentation.
 
 ## Next Steps
 

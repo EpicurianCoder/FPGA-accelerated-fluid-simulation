@@ -1,0 +1,21 @@
+#pragma HLS PIPELINE II=1
+Instructs the compiler to handle (maybe overlap) loop iterations so that the FPGA can compute exactly one fluid cell / clock cycle.
+
+#pragma HLS ARRAY_PARTITION variable=grid_f type=complete dim=3
+This takes the thirds dimension in the array grid_f[][][] which is [NUM_DIRECTIONS] and = 9.
+We explicitly partition the array into separate memory banks so the FPGA can access them in parallel.
+
+#pragma HLS UNROLL
+Physically duplicates hardware logic inside the “directional” loops. This makes it so that all 9 directions can be computed in parallel.
+
+#pragma HLS INLINE
+Removes the latency involved with calling functions. It does this by physically copying the compute_collision() hardware logic directly into the main hardware pipeline. (this is awesome!)
+
+#pragma HLS INTERFACE m_axi port=grid_f depth=147456
+Creates a high-bandwidth AXI4 memory port to pass your massive fluid grids back and forth between the FPGA fabric and the Kria board's main memory. 147456 = 64 * 256 * 9 (grid_w * grid_h * 9_cell_values)
+
+#pragma HLS INTERFACE s_axilite port=omega
+Since the omega value can change (but is a key component to our simulation), we can use the “Lite” port to deliver a single value (omega) to the FPGA. The FPGA itself cannot reach out for the value, rather it waits for the CPU to write that values into the newly dedicated space, this is the nature of the slave, represented by the ‘s’.
+
+#pragma HLS DEPENDENCE variable=grid_f type=intra direction=RAW false
+To prevent a specific type of error (Read-After-Write: RAW), the compiler has a feature known as “conservative memory scheduling”, and if we want to take advantage of ‘#pragma HLS PIPELINE II=1’ and our single clock cycle reads, we need to disable this protection and ensure we will abide by the compiler rules.

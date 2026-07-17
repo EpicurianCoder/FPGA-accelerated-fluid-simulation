@@ -39,6 +39,8 @@ void compute_collision(lbm_type f[NUM_DIRECTIONS], lbm_type new_f[NUM_DIRECTIONS
         lbm_type temp_2 = cu * 3.0f;
 
         // Equilibrium Function
+        // Consider pulling this out maybe?
+        // Write compute_obstacle_collision() - Since main() loops needs this atm
         lbm_type feq = weights[i] * rho * (1.0f + temp_2 + 0.5f * temp_2 * temp_2 - temp_1);
 
         // BGK Collisions

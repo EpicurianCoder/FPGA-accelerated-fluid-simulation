@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.10)
+project(lbm_tb_opencv)
+find_package(OpenCV REQUIRED)
+add_executable(lbm_tb_opencv tb/lbm_tb_opencv.cpp src/kria_lbm.cpp)
+target_link_libraries(lbm_tb_opencv ${OpenCV_LIBS})
+target_include_directories(lbm_tb_opencv PRIVATE ${OpenCV_INCLUDE_DIRS})
