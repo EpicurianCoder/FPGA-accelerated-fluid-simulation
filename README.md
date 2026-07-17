@@ -10,8 +10,8 @@ The core physics engine is written in C++ and synthesized into a custom hardware
   <img src="samples/fluid_sim_pillars_2.gif" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
 </p>
 
-The custom LBM fluid simulation, currently executed using CPU and before HLS pragmas are impelemnted for FPGA hardware acceleration.
-Running at 300fps, with 'dual pillar' obstacles and an omega of 1.93
+_The custom LBM fluid simulation, currently executed using CPU and before HLS pragmas are impelemnted for FPGA hardware acceleration._
+_Running at 300fps, with 'dual pillar' obstacles and an omega of 1.93_
 
 ## Project Status
 
@@ -26,23 +26,23 @@ Running at 300fps, with 'dual pillar' obstacles and an omega of 1.93
 - **Data Structures:** The D2Q9 physics constants, velocity vectors, and grid limits have been defined in the core header file.
 
 <p align="center">
-  <img src="samples/header_image.png" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+  <img src="samples/header_image.png" width="600" alt="Pseudo code for the header file" />
 </p>
 
 - **Physics Engine:** The localized BGK collision mathematics (calculating macroscopic density/velocity, equilibrium distribution, and relaxation) have been successfully implemented.
 
 <p align="center">
-  <img src="samples/core_image.png" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+  <img src="samples/core_image.png" width="600" alt="Pseudo code for the core physics file" />
 </p>
 
 - **CPU Testbench:** A basic C++ testing environment has been established to allocate heap memory and verify mathematical execution on the CPU prior to hardware synthesis.
 
 <p align="center">
-  <img src="samples/tests_image.png" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+  <img src="samples/tests_image.png" width="600" alt="Pseudo code for the testbench file" />
 </p>
 
 <p align="center">
-  <img src="samples/opencv_image.png" width="600" alt="LBM Fluid Simulation with dual pillars, 300 fps, using CPU" />
+  <img src="samples/opencv_image.png" width="600" alt="Pseudo code for the open_cv tenchbench file" />
 </p>
 
 ### Phase 3: Boundary & Obstacle Mechanics
@@ -62,6 +62,12 @@ The algorithm prevents memory read/write collisions by employing two distinct gr
 - **Phase 2 (Streaming):** The hardware reads the post-collision data from `grid_new_f`, shifts the coordinates based on the 9 directional velocity vectors, and writes the updated data back into `grid_f`, readying the memory for the next time step.
 
 ### 2. Hardware-Optimized Boundary Conditions
+
+<p align="center">
+  <img src="samples/cells_image.png" width="900" alt="Data structure breakdown LBM" />
+</p>
+
+_(left) Interacting forces between D2Q9 cells and (right) how their relevant mass distrution interactions are highlighted (yellow squares) in order to calculate the updated mass distribution for the central cell (red squares)_
 
 To simulate a continuous wind tunnel environment, Periodic Boundary Conditions are applied during the streaming phase. If a particle hits the side of the 256x64 grid, it immediately bounces off according to the standard object collision rules within the environment (particles reflect 180degrees).
 
